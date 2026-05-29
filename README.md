@@ -108,6 +108,24 @@ npm run db:seed
 npm run dev
 ```
 
+### 6. Déploiement Plesk / Node.js
+
+Après le build, Plesk doit lancer l'application Node, pas servir `.next/` comme un site statique.
+
+```bash
+npm run build
+node server.js
+```
+
+Dans Plesk :
+
+- **Application root** : dossier du projet
+- **Startup file** : `server.js`
+- **Startup command** : `node server.js`
+- **Build command** : `npm run build`
+
+Le fichier `server.js` écoute sur `PORT` (fourni par Plesk) et `0.0.0.0`.
+
 Ouvrir [http://localhost:3000](http://localhost:3000) pour la vitrine, [http://localhost:3000/admin/login](http://localhost:3000/admin/login) pour l'admin.
 
 ---
