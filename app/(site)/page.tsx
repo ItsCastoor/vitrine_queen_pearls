@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getAllSettings, getSetting } from "@/lib/settings";
-import { getHighlightEvents } from "@/lib/data";
+import { getHighlightEvents, getHomeGalleryImages } from "@/lib/data";
 import { formatDate } from "@/lib/format";
 import { PearlDivider } from "@/components/PearlDivider";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const settings = await getAllSettings();
   const events = await getHighlightEvents();
+  const gallery = await getHomeGalleryImages(3);
 
   const heroTitle = getSetting(settings, "home.hero_title");
   const tagline = getSetting(settings, "home.hero_tagline");
@@ -21,7 +22,15 @@ export default async function HomePage() {
     <>
       {/* HERO */}
       <section className="relative flex min-h-[88vh] items-center justify-center overflow-hidden px-6 text-center">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-rose/60 via-nacre to-nacre" />
+        <Image
+          src="/logo.png"
+          alt=""
+          aria-hidden
+          fill
+          priority
+          className="-z-20 object-cover object-center opacity-100"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-nacre/70 via-nacre/60 to-nacre/85" />
         <div className="absolute inset-0 -z-10 opacity-40 [background:radial-gradient(circle_at_50%_20%,rgba(201,166,107,0.25),transparent_60%)]" />
 
         <div className="mx-auto max-w-4xl">
@@ -52,22 +61,43 @@ export default async function HomePage() {
       {/* IMAGES FORTES */}
       <section className="mx-auto max-w-6xl px-6 pb-8">
         <div className="grid gap-4 sm:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="qp-card relative aspect-[3/4] overflow-hidden"
-            >
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-rose/50 to-or/20">
-                <span className="qp-title text-3xl text-or-deep/70">
-                  Queen Pearls
-                </span>
-              </div>
-            </div>
-          ))}
+          {gallery.length > 0
+            ? gallery.map((img) => (
+                <figure
+                  key={img.id}
+                  className="qp-card relative aspect-[3/4] overflow-hidden"
+                >
+                  <Image
+                    src={img.url}
+                    alt={img.caption ?? "Queen Pearls"}
+                    fill
+                    className="object-cover"
+                  />
+                  {img.caption && (
+                    <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/60 to-transparent p-4 text-sm text-white">
+                      {img.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              ))
+            : [0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="qp-card relative aspect-[3/4] overflow-hidden"
+                >
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-rose/50 to-or/20">
+                    <span className="qp-title text-3xl text-or-deep/70">
+                      Queen Pearls
+                    </span>
+                  </div>
+                </div>
+              ))}
         </div>
-        <p className="mt-3 text-center text-xs uppercase tracking-[0.3em] text-greypearl">
-          Galerie à venir — ajoutez vos images depuis l&apos;espace privé
-        </p>
+        {gallery.length === 0 && (
+          <p className="mt-3 text-center text-xs uppercase tracking-[0.3em] text-greypearl">
+            Galerie à venir — ajoutez vos images depuis l&apos;espace privé
+          </p>
+        )}
       </section>
 
       {/* PROCHAINS ÉVÉNEMENTS */}

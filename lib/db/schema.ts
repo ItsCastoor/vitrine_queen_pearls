@@ -77,6 +77,7 @@ export const galleryItems = mysqlTable("gallery_items", {
   thumbnailUrl: varchar("thumbnail_url", { length: 512 }),
   caption: varchar("caption", { length: 255 }),
   sortOrder: int("sort_order").notNull().default(0),
+  showOnHome: boolean("show_on_home").notNull().default(false),
   createdAt: createdAt(),
 });
 

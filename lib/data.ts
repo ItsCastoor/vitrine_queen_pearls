@@ -71,6 +71,23 @@ export const getHighlightEvents = () =>
     [],
   );
 
+export const getHomeGalleryImages = (limit = 3) =>
+  safe(
+    () =>
+      db
+        .select()
+        .from(galleryItems)
+        .where(
+          and(
+            eq(galleryItems.type, "photo"),
+            eq(galleryItems.showOnHome, true),
+          ),
+        )
+        .orderBy(asc(galleryItems.sortOrder), desc(galleryItems.createdAt))
+        .limit(limit),
+    [],
+  );
+
 export const getEventBySlug = (slug: string) =>
   safe(
     async () => {

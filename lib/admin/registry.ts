@@ -145,6 +145,7 @@ export const RESOURCES: Record<string, ResourceDef> = {
       { name: "caption", label: "Légende" },
       { name: "type", label: "Type" },
       { name: "categoryId", label: "Catégorie (id)" },
+      { name: "showOnHome", label: "Accueil" },
     ],
     fields: [
       { name: "categoryId", label: "ID de catégorie", type: "number", required: true },
@@ -161,6 +162,12 @@ export const RESOURCES: Record<string, ResourceDef> = {
       { name: "thumbnailUrl", label: "Miniature (vidéo)", type: "image", uploadCategory: "gallery" },
       { name: "caption", label: "Légende", type: "text" },
       { name: "sortOrder", label: "Ordre", type: "number" },
+      {
+        name: "showOnHome",
+        label: "Afficher sur l'accueil (max 3)",
+        type: "boolean",
+        help: "Cochez jusqu'à 3 photos : elles apparaîtront dans la section « images fortes » de l'accueil, triées par Ordre.",
+      },
     ],
   },
   tenues: {

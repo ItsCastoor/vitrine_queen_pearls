@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Point d'entrée Node (CommonJS) pour le déploiement Plesk.
+    "server.js",
   ]),
 ]);
 
