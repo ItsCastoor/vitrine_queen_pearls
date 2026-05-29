@@ -190,6 +190,8 @@ Depuis l'espace admin, on peut gérer :
 | Port 3307 déjà utilisé                        | Vérifier qu'aucun autre tunnel/MySQL local ne l'occupe, ou changer le port (mettre à jour `.env.local` ET la commande SSH) |
 | Le tunnel se ferme tout seul                  | Ajouter `-o ServerAliveInterval=60` à la commande SSH                  |
 | Build qui échoue avec `params` synchrones     | Next.js 16 → `params` est async : `const { slug } = await params`      |
+| Images cassées en prod : `isn't a valid image ... received null` | L'optimiseur `next/image` ne peut pas se requêter derrière le proxy Plesk. Résolu via `images.unoptimized: true` dans `next.config.ts` (déjà configuré). |
+| Images uploadées invisibles après déploiement | Vérifier que `public/uploads/` est **inscriptible** par l'utilisateur Node sur Plesk, et qu'il n'est pas écrasé à chaque déploiement |
 
 ---
 
