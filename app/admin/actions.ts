@@ -55,6 +55,17 @@ export async function saveResource(
 
   const values = buildValues(resource.fields, formData);
 
+  // Logique spéciale pour galerie-items : categoryId string → number|null
+  if (resourceKey === "galerie-items" && "categoryId" in values) {
+    const catId = values.categoryId;
+    if (catId === "" || catId == null) {
+      values.categoryId = null;
+    } else {
+      const parsed = Number(catId);
+      values.categoryId = Number.isNaN(parsed) ? null : parsed;
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const table = resource.table as any;
 

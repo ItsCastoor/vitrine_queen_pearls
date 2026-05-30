@@ -71,7 +71,7 @@ export const galleryCategories = mysqlTable("gallery_categories", {
 
 export const galleryItems = mysqlTable("gallery_items", {
   id: id(),
-  categoryId: bigint("category_id", { mode: "number", unsigned: true }).notNull(),
+  categoryId: bigint("category_id", { mode: "number", unsigned: true }),
   type: mysqlEnum("type", ["photo", "video"]).notNull().default("photo"),
   url: varchar("url", { length: 512 }).notNull(),
   thumbnailUrl: varchar("thumbnail_url", { length: 512 }),

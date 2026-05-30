@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   posts,
@@ -138,6 +138,17 @@ export const getGalleryItems = (categoryId: number) =>
         .select()
         .from(galleryItems)
         .where(eq(galleryItems.categoryId, categoryId))
+        .orderBy(asc(galleryItems.sortOrder)),
+    [],
+  );
+
+export const getUncategorizedGalleryItems = () =>
+  safe(
+    () =>
+      db
+        .select()
+        .from(galleryItems)
+        .where(isNull(galleryItems.categoryId))
         .orderBy(asc(galleryItems.sortOrder)),
     [],
   );
