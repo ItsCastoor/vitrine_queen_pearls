@@ -142,7 +142,10 @@ export const recruitmentApplications = mysqlTable("recruitment_applications", {
   id: id(),
   pseudo: varchar("pseudo", { length: 191 }).notNull(),
   discord: varchar("discord", { length: 191 }),
+  age: varchar("age", { length: 32 }),
+  type: mysqlEnum("type", ["member", "staff"]).notNull().default("member"),
   message: text("message"),
+  answers: text("answers"),
   status: mysqlEnum("status", ["new", "read", "accepted", "rejected"])
     .notNull()
     .default("new"),

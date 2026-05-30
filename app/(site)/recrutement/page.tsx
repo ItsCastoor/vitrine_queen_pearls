@@ -3,7 +3,7 @@ import { getAllSettings, getSetting } from "@/lib/settings";
 import { getFaq } from "@/lib/data";
 import { PageHeader } from "@/components/PageHeader";
 import { PearlDivider } from "@/components/PearlDivider";
-import { RecruitmentForm } from "@/components/RecruitmentForm";
+import { MemberRecruitmentForm } from "@/components/recruitment/MemberRecruitmentForm";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Recrutement" };
@@ -73,13 +73,13 @@ export default async function RecrutementPage() {
 
         <div className="mx-auto max-w-2xl">
           <h2 className="qp-title text-center text-3xl text-ink">
-            Formulaire de candidature
+            Formulaire de candidature · Membre
           </h2>
           <p className="mt-2 text-center font-serif text-lg text-greypearl">
-            Présentez-vous en quelques mots — nous reviendrons vers vous.
+            Réponds avec sérieux et sincérité — la sélection est renforcée.
           </p>
           <div className="mt-8">
-            <RecruitmentForm />
+            <MemberRecruitmentForm />
           </div>
         </div>
 

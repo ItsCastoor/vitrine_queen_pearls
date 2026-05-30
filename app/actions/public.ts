@@ -3,6 +3,10 @@
 import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { recruitmentApplications, guestbookEntries } from "@/lib/db/schema";
+import {
+  validateMemberAnswers,
+  type MemberAnswers,
+} from "@/lib/recruitment/member-form";
 
 const recruitmentSchema = z.object({
   pseudo: z.string().trim().min(2, "Pseudo trop court.").max(120),
@@ -36,6 +40,43 @@ export async function submitRecruitment(
       pseudo: parsed.data.pseudo,
       discord: parsed.data.discord || null,
       message: parsed.data.message || null,
+    });
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Impossible d'envoyer la candidature pour le moment." };
+  }
+}
+
+export async function submitMemberRecruitment(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  let answers: MemberAnswers;
+  try {
+    const raw = formData.get("payload");
+    answers = JSON.parse(typeof raw === "string" ? raw : "{}");
+  } catch {
+    return { ok: false, error: "Données du formulaire illisibles." };
+  }
+
+  const validationError = validateMemberAnswers(answers);
+  if (validationError) {
+    return { ok: false, error: validationError };
+  }
+
+  const str = (v: unknown) =>
+    typeof v === "string" ? v.trim() : Array.isArray(v) ? v.join(", ") : "";
+
+  const pseudo = str(answers.sso_pseudo).slice(0, 191) || "Candidate";
+
+  try {
+    await db.insert(recruitmentApplications).values({
+      pseudo,
+      discord: str(answers.discord_pseudo).slice(0, 191) || null,
+      age: str(answers.age).slice(0, 32) || null,
+      type: "member",
+      message: str(answers.motivation) || null,
+      answers: JSON.stringify(answers),
     });
     return { ok: true };
   } catch {
