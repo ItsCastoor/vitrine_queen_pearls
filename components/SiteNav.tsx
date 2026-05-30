@@ -58,7 +58,7 @@ export function SiteNav() {
 
         <Link
           href="/recrutement"
-          className="ml-auto hidden qp-btn qp-btn--solid !px-5 !py-2 lg:inline-flex"
+          className="hidden qp-btn qp-btn--solid !px-5 !py-2 lg:inline-flex"
         >
           Rejoindre
         </Link>

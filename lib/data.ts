@@ -160,7 +160,7 @@ export const getPublishedGuestbook = () =>
       db
         .select()
         .from(guestbookEntries)
-        .where(eq(guestbookEntries.isPublished, true))
+        .where(eq(guestbookEntries.status, "approved"))
         .orderBy(desc(guestbookEntries.createdAt)),
     [],
   );

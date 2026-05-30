@@ -132,6 +132,9 @@ export const guestbookEntries = mysqlTable("guestbook_entries", {
   author: varchar("author", { length: 191 }).notNull(),
   message: text("message").notNull(),
   isPublished: boolean("is_published").notNull().default(false),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"])
+    .notNull()
+    .default("pending"),
   createdAt: createdAt(),
 });
 
