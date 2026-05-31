@@ -222,9 +222,12 @@ export const MEMBER_QUESTIONS: Question[] = MEMBER_FORM.flatMap(
 
 export type MemberAnswers = Record<string, string | string[]>;
 
-/** Valide les réponses côté serveur. Retourne le 1er message d'erreur ou null. */
-export function validateMemberAnswers(answers: MemberAnswers): string | null {
-  for (const q of MEMBER_QUESTIONS) {
+/** Valide un jeu de réponses contre une liste de questions. Retourne le 1er message d'erreur ou null. */
+export function validateAnswers(
+  questions: Question[],
+  answers: MemberAnswers,
+): string | null {
+  for (const q of questions) {
     const value = answers[q.id];
     
     let isRequired = q.required ?? false;
@@ -263,4 +266,9 @@ export function validateMemberAnswers(answers: MemberAnswers): string | null {
     }
   }
   return null;
+}
+
+/** Valide les réponses du formulaire membre. */
+export function validateMemberAnswers(answers: MemberAnswers): string | null {
+  return validateAnswers(MEMBER_QUESTIONS, answers);
 }

@@ -8,6 +8,7 @@ import { admins, siteSettings } from "@/lib/db/schema";
 import { getResource, type FieldDef } from "@/lib/admin/registry";
 import { requireAdmin } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { slugify } from "@/lib/slug";
 
 function coerceField(field: FieldDef, formData: FormData): unknown {
   const raw = formData.get(field.name);
@@ -68,6 +69,27 @@ export async function saveResource(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const table = resource.table as any;
+
+  // Slug généré automatiquement à partir du champ source (titre, nom…).
+  if (resource.slugFrom) {
+    const source = String(formData.get(resource.slugFrom) ?? "").trim();
+    const base = slugify(source) || "element";
+    const rows: { id: number; slug: string | null }[] = await db
+      .select({ id: table.id, slug: table.slug })
+      .from(table);
+    const taken = new Set(
+      rows
+        .filter((r) => String(r.id) !== String(idRaw))
+        .map((r) => r.slug)
+        .filter((s): s is string => !!s),
+    );
+    let candidate = base;
+    let i = 2;
+    while (taken.has(candidate)) {
+      candidate = `${base}-${i++}`;
+    }
+    values.slug = candidate;
+  }
 
   if (idRaw) {
     const id = Number(idRaw);

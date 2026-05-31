@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   posts,
@@ -144,12 +144,16 @@ export const getGalleryItems = (categoryId: number) =>
 
 export const getUncategorizedGalleryItems = () =>
   safe(
-    () =>
-      db
-        .select()
-        .from(galleryItems)
-        .where(isNull(galleryItems.categoryId))
-        .orderBy(asc(galleryItems.sortOrder)),
+    async () => {
+      const [items, cats] = await Promise.all([
+        db.select().from(galleryItems).orderBy(asc(galleryItems.sortOrder)),
+        db.select({ id: galleryCategories.id }).from(galleryCategories),
+      ]);
+      const valid = new Set(cats.map((c) => c.id));
+      return items.filter(
+        (it) => it.categoryId == null || !valid.has(it.categoryId),
+      );
+    },
     [],
   );
 

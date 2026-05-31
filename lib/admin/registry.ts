@@ -43,6 +43,8 @@ export interface ResourceDef {
   listColumns: { name: string; label: string }[];
   orderBy?: string;
   canCreate?: boolean;
+  /** Si défini, le slug est généré automatiquement à partir de ce champ. */
+  slugFrom?: string;
 }
 
 export const RESOURCES: Record<string, ResourceDef> = {
@@ -52,6 +54,7 @@ export const RESOURCES: Record<string, ResourceDef> = {
     labelSingular: "Article",
     table: posts,
     canCreate: true,
+    slugFrom: "title",
     listColumns: [
       { name: "title", label: "Titre" },
       { name: "isDraft", label: "Brouillon" },
@@ -59,7 +62,6 @@ export const RESOURCES: Record<string, ResourceDef> = {
     ],
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
-      { name: "slug", label: "Slug (URL)", type: "text", required: true, help: "Ex. soiree-nacree" },
       { name: "excerpt", label: "Accroche", type: "textarea" },
       { name: "body", label: "Contenu", type: "markdown" },
       { name: "coverUrl", label: "Image de couverture", type: "image", uploadCategory: "posts" },
@@ -73,6 +75,7 @@ export const RESOURCES: Record<string, ResourceDef> = {
     labelSingular: "Événement",
     table: events,
     canCreate: true,
+    slugFrom: "title",
     listColumns: [
       { name: "title", label: "Titre" },
       { name: "status", label: "Statut" },
@@ -80,7 +83,6 @@ export const RESOURCES: Record<string, ResourceDef> = {
     ],
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
-      { name: "slug", label: "Slug (URL)", type: "text", required: true },
       { name: "excerpt", label: "Accroche", type: "textarea" },
       { name: "body", label: "Description", type: "markdown" },
       { name: "coverUrl", label: "Image", type: "image", uploadCategory: "events" },
@@ -124,13 +126,13 @@ export const RESOURCES: Record<string, ResourceDef> = {
     labelSingular: "Catégorie",
     table: galleryCategories,
     canCreate: true,
+    slugFrom: "name",
     listColumns: [
       { name: "name", label: "Nom" },
-      { name: "slug", label: "Slug" },
+      { name: "description", label: "Description" },
     ],
     fields: [
       { name: "name", label: "Nom", type: "text", required: true },
-      { name: "slug", label: "Slug (URL)", type: "text", required: true },
       { name: "description", label: "Description", type: "textarea" },
       { name: "sortOrder", label: "Ordre", type: "number" },
     ],

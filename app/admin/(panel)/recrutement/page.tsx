@@ -6,6 +6,8 @@ import {
 } from "@/lib/db/schema";
 import { formatDate } from "@/lib/format";
 import { MEMBER_FORM } from "@/lib/recruitment/member-form";
+import { STAFF_FORMS_BY_ID } from "@/lib/recruitment/staff-forms";
+import type { FormSection } from "@/lib/recruitment/member-form";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { setApplicationStatus, deleteApplication } from "./actions";
 
@@ -46,6 +48,24 @@ function parseAnswers(raw: string | null): Record<string, string | string[]> {
   }
 }
 
+/** Détermine le libellé et la structure de questions selon le type de candidature. */
+function resolveForm(app: RecruitmentApplication): {
+  label: string;
+  sections: FormSection[];
+} {
+  if (app.type === "staff") {
+    const answers = parseAnswers(app.answers);
+    const formId =
+      typeof answers.__formId === "string" ? answers.__formId : undefined;
+    const form = formId ? STAFF_FORMS_BY_ID[formId] : undefined;
+    if (form) {
+      return { label: `Instructrice · ${form.discipline}`, sections: form.sections };
+    }
+    return { label: "Instructrice", sections: [] };
+  }
+  return { label: "Membre", sections: MEMBER_FORM };
+}
+
 function StatusButton({
   id,
   status,
@@ -78,6 +98,7 @@ function StatusButton({
 function ApplicationCard({ app }: { app: RecruitmentApplication }) {
   const meta = STATUS_META[app.status];
   const answers = parseAnswers(app.answers);
+  const { label: typeLabel, sections } = resolveForm(app);
 
   return (
     <article className="qp-card flex flex-col gap-3 p-5">
@@ -90,6 +111,9 @@ function ApplicationCard({ app }: { app: RecruitmentApplication }) {
           {app.age && (
             <span className="text-sm text-greypearl">· {app.age} ans</span>
           )}
+          <span className="rounded-full border border-or/30 bg-rose/20 px-3 py-0.5 text-[11px] font-medium uppercase tracking-wider text-or-deep">
+            {typeLabel}
+          </span>
           <span
             className={`rounded-full border px-3 py-0.5 text-[11px] font-medium uppercase tracking-wider ${meta.badge}`}
           >
@@ -106,7 +130,7 @@ function ApplicationCard({ app }: { app: RecruitmentApplication }) {
           Voir les réponses ▾
         </summary>
         <div className="mt-4 space-y-6">
-          {MEMBER_FORM.map((section) => (
+          {sections.map((section) => (
             <section key={section.id}>
               <h4 className="qp-overline mb-2">{section.title}</h4>
               <dl className="space-y-3">
@@ -189,10 +213,10 @@ export default async function RecruitmentAdminPage() {
     <div>
       <div>
         <p className="qp-overline mb-1">Recrutement</p>
-        <h1 className="qp-title text-4xl text-ink">Candidatures · Membres</h1>
+        <h1 className="qp-title text-4xl text-ink">Candidatures</h1>
         <p className="mt-2 text-sm text-greypearl">
-          Consultez les réponses détaillées et validez ou refusez chaque
-          candidature. L&apos;historique est conservé.
+          Membres et instructrices. Consultez les réponses détaillées et validez
+          ou refusez chaque candidature. L&apos;historique est conservé.
         </p>
       </div>
 

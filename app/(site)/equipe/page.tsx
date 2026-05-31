@@ -3,6 +3,8 @@ import Image from "next/image";
 import { getStaff } from "@/lib/data";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
+import { PearlDivider } from "@/components/PearlDivider";
+import { StaffRecruitmentSection } from "@/components/recruitment/StaffRecruitmentSection";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Équipe" };
@@ -47,6 +49,24 @@ export default async function EquipePage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-16">
+        <PearlDivider />
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="qp-overline">Rejoindre l&apos;équipe</p>
+          <h2 className="qp-title mt-1 text-3xl text-ink">
+            Devenir instructrice
+          </h2>
+          <p className="mt-3 font-serif text-lg text-greypearl">
+            Tu rêves de transmettre ta passion ? Choisis ta discipline et
+            dépose ta candidature. La sélection est exigeante, mais l&apos;aventure
+            en vaut la peine. 🤍
+          </p>
+        </div>
+        <div className="mt-10">
+          <StaffRecruitmentSection />
+        </div>
       </section>
     </>
   );

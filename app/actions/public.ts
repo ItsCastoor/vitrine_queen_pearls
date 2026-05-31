@@ -5,8 +5,10 @@ import { db } from "@/lib/db/client";
 import { recruitmentApplications, guestbookEntries } from "@/lib/db/schema";
 import {
   validateMemberAnswers,
+  validateAnswers,
   type MemberAnswers,
 } from "@/lib/recruitment/member-form";
+import { STAFF_FORMS_BY_ID } from "@/lib/recruitment/staff-forms";
 
 const recruitmentSchema = z.object({
   pseudo: z.string().trim().min(2, "Pseudo trop court.").max(120),
@@ -81,6 +83,54 @@ export async function submitMemberRecruitment(
     return { ok: true };
   } catch {
     return { ok: false, error: "Impossible d'envoyer la candidature pour le moment." };
+  }
+}
+
+export async function submitStaffRecruitment(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const formId = formData.get("formId");
+  const form =
+    typeof formId === "string" ? STAFF_FORMS_BY_ID[formId] : undefined;
+  if (!form) {
+    return { ok: false, error: "Formulaire inconnu." };
+  }
+
+  let answers: MemberAnswers;
+  try {
+    const raw = formData.get("payload");
+    answers = JSON.parse(typeof raw === "string" ? raw : "{}");
+  } catch {
+    return { ok: false, error: "Données du formulaire illisibles." };
+  }
+
+  const questions = form.sections.flatMap((s) => s.questions);
+  const validationError = validateAnswers(questions, answers);
+  if (validationError) {
+    return { ok: false, error: validationError };
+  }
+
+  const str = (v: unknown) =>
+    typeof v === "string" ? v.trim() : Array.isArray(v) ? v.join(", ") : "";
+
+  const pseudo = str(answers.pseudo_sso).slice(0, 191) || "Candidate";
+
+  try {
+    await db.insert(recruitmentApplications).values({
+      pseudo,
+      discord: str(answers.discord).slice(0, 191) || null,
+      age: str(answers.age).slice(0, 32) || null,
+      type: "staff",
+      message: str(answers.pourquoi_instructrice) || null,
+      answers: JSON.stringify({ __formId: form.id, ...answers }),
+    });
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      error: "Impossible d'envoyer la candidature pour le moment.",
+    };
   }
 }
 
