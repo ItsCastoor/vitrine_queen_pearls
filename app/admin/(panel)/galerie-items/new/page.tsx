@@ -15,7 +15,7 @@ export default async function NewGalleryItemPage() {
   if (!resource) notFound();
 
   const categories = await getGalleryCategories();
-  const action = saveResource.bind(null, "galerie-items", "new");
+  const action = saveResource.bind(null, "galerie-items", null);
 
   const fields = resource.fields.map((f) => {
     if (f.name === "categoryId") {

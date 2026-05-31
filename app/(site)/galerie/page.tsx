@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { GalleryUncategorized } from "@/components/GalleryUncategorized";
 import Link from "next/link";
 import { getGalleryCategories, getUncategorizedGalleryItems } from "@/lib/data";
 import { PageHeader } from "@/components/PageHeader";
@@ -51,37 +52,7 @@ export default async function GaleriePage() {
                   <h2 className="qp-title mb-8 text-center text-3xl text-ink">
                     Hors catégorie
                   </h2>
-                  <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
-                    {uncategorized.map((it) =>
-                      it.type === "video" ? (
-                        <div key={it.id} className="qp-card overflow-hidden">
-                          <video controls className="w-full" poster={it.thumbnailUrl ?? undefined}>
-                            <source src={it.url} />
-                          </video>
-                          {it.caption && (
-                            <p className="p-3 text-center text-sm text-greypearl">{it.caption}</p>
-                          )}
-                        </div>
-                      ) : (
-                        <figure key={it.id} className="qp-card overflow-hidden">
-                          <div className="relative">
-                            <Image
-                              src={it.url}
-                              alt={it.caption ?? "Hors catégorie"}
-                              width={600}
-                              height={800}
-                              className="h-auto w-full object-cover"
-                            />
-                          </div>
-                          {it.caption && (
-                            <figcaption className="p-3 text-center text-sm text-greypearl">
-                              {it.caption}
-                            </figcaption>
-                          )}
-                        </figure>
-                      ),
-                    )}
-                  </div>
+                  <GalleryUncategorized items={uncategorized} />
                 </div>
               </>
             )}

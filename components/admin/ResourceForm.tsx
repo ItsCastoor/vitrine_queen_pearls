@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { FieldDef } from "@/lib/admin/registry";
 import { ImageField } from "./ImageField";
@@ -43,9 +44,39 @@ export function ResourceForm({
   fields: FieldDef[];
   values: Record<string, unknown>;
 }) {
+  const conditionFields = new Set(
+    fields.filter((f) => f.showIf).map((f) => f.showIf!.field),
+  );
+
+  const [watched, setWatched] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    for (const f of fields) {
+      if (conditionFields.has(f.name)) {
+        init[f.name] =
+          (values[f.name] as string) ??
+          (f.type === "select" ? (f.options?.[0]?.value ?? "") : "");
+      }
+    }
+    return init;
+  });
+
+  const watchHandler = (name: string) =>
+    conditionFields.has(name)
+      ? (e: { target: { value: string } }) =>
+          setWatched((w) => ({ ...w, [name]: e.target.value }))
+      : undefined;
+
+  const isVisible = (f: FieldDef) => {
+    if (!f.showIf) return true;
+    const cur = watched[f.showIf.field];
+    const exp = f.showIf.value;
+    return Array.isArray(exp) ? exp.includes(cur) : cur === exp;
+  };
+
   return (
     <form action={action} className="qp-card max-w-2xl space-y-6 p-8">
       {fields.map((f) => {
+        if (!isVisible(f)) return null;
         const v = values[f.name];
         return (
           <div key={f.name}>
@@ -59,6 +90,7 @@ export function ResourceForm({
                 rows={4}
                 required={f.required}
                 defaultValue={(v as string) ?? ""}
+                onChange={watchHandler(f.name)}
                 className={inputClass}
               />
             )}
@@ -69,6 +101,7 @@ export function ResourceForm({
                 rows={10}
                 required={f.required}
                 defaultValue={(v as string) ?? ""}
+                onChange={watchHandler(f.name)}
                 className={`${inputClass} font-mono text-sm`}
               />
             )}
@@ -79,6 +112,7 @@ export function ResourceForm({
                 type="text"
                 required={f.required}
                 defaultValue={(v as string) ?? ""}
+                onChange={watchHandler(f.name)}
                 className={inputClass}
               />
             )}
@@ -89,6 +123,7 @@ export function ResourceForm({
                 type="number"
                 required={f.required}
                 defaultValue={(v as number) ?? 0}
+                onChange={watchHandler(f.name)}
                 className={inputClass}
               />
             )}
@@ -127,6 +162,7 @@ export function ResourceForm({
               <select
                 name={f.name}
                 defaultValue={(v as string) ?? f.options?.[0]?.value ?? ""}
+                onChange={watchHandler(f.name)}
                 className={inputClass}
               >
                 {f.options?.map((o) => (

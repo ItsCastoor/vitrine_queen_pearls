@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getEvents } from "@/lib/data";
+import { MemoriesGrid } from "@/components/MemoriesGrid";
 import { formatDate } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
 import { PearlDivider } from "@/components/PearlDivider";
@@ -65,15 +66,15 @@ export default async function EvenementsPage() {
           subtitle="Les grands moments qui ont marqué l'histoire des Queen Pearls."
           align="left"
         />
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {past.length === 0 ? (
-            <div className="col-span-full">
-              <EmptyState message="Les souvenirs s'écriront bientôt." />
-            </div>
-          ) : (
-            past.map((e) => <EventCard key={e.id} e={e} />)
-          )}
-        </div>
+        {past.length === 0 ? (
+  <div className="col-span-full mt-8">
+    <EmptyState message="Les souvenirs s'écriront bientôt." />
+  </div>
+) : (
+  <div className="mt-8">
+    <MemoriesGrid events={past} />
+  </div>
+)}
       </section>
     </>
   );

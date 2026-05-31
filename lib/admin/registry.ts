@@ -32,6 +32,8 @@ export interface FieldDef {
   options?: { value: string; label: string }[];
   uploadCategory?: string;
   help?: string;
+  /** N'affiche ce champ que si un autre champ a la valeur indiquée. */
+  showIf?: { field: string; value: string | string[] };
 }
 
 export interface ResourceDef {
@@ -161,7 +163,13 @@ export const RESOURCES: Record<string, ResourceDef> = {
         ],
       },
       { name: "url", label: "Fichier", type: "image", uploadCategory: "gallery", required: true },
-      { name: "thumbnailUrl", label: "Miniature (vidéo)", type: "image", uploadCategory: "gallery" },
+      {
+        name: "thumbnailUrl",
+        label: "Miniature (vidéo)",
+        type: "image",
+        uploadCategory: "gallery",
+        showIf: { field: "type", value: "video" },
+      },
       { name: "caption", label: "Légende", type: "text" },
       { name: "sortOrder", label: "Ordre", type: "number" },
       {
