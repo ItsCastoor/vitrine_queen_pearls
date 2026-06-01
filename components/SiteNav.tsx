@@ -26,14 +26,14 @@ export function SiteNav() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-or/20 bg-nacre/80 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-7xl items-center justify-around px-6 py-4">
-        <Link href="/" className="flex items-center gap-3">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3">
           <span className="qp-pearl" />
-          <span className="qp-title text-2xl text-ink">Queen Pearls</span>
+          <span className="qp-title text-xl text-ink sm:text-2xl">Queen Pearls</span>
         </Link>
 
         <button
-          className="qp-navlink lg:hidden"
+          className="qp-navlink rounded-full px-2 py-1 lg:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label="Menu"
         >
@@ -65,12 +65,12 @@ export function SiteNav() {
       </nav>
 
       {open && (
-        <ul className="flex flex-col gap-3 border-t border-or/20 bg-nacre px-6 py-5 lg:hidden">
+        <ul className="flex flex-col gap-4 border-t border-or/20 bg-nacre px-4 py-6 sm:px-6 lg:hidden">
           {links.map((l) => (
             <li key={l.href}>
               <Link
                 href={l.href}
-                className="qp-navlink"
+                className="qp-navlink inline-block py-1"
                 onClick={() => setOpen(false)}
               >
                 {l.label}
