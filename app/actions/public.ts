@@ -3,6 +3,9 @@
 import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { recruitmentApplications, guestbookEntries } from "@/lib/db/schema";
+import { notifyDiscord } from "@/lib/discord";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 import {
   validateMemberAnswers,
   validateAnswers,
@@ -80,6 +83,17 @@ export async function submitMemberRecruitment(
       message: str(answers.motivation) || null,
       answers: JSON.stringify(answers),
     });
+    void notifyDiscord(process.env.DISCORD_WEBHOOK_RECRUTEMENT, {
+      title: "🌸 Nouvelle candidature · Membre",
+      color: 0xc9a66b,
+      url: `${SITE_URL}/admin/recrutement`,
+      fields: [
+        { name: "Pseudo SSO", value: pseudo, inline: true },
+        { name: "Discord", value: str(answers.discord_pseudo) || "—", inline: true },
+        { name: "Type", value: "Membre", inline: true },
+      ],
+      footer: { text: "Queen Pearls — Candidatures" },
+    });
     return { ok: true };
   } catch {
     return { ok: false, error: "Impossible d'envoyer la candidature pour le moment." };
@@ -125,6 +139,18 @@ export async function submitStaffRecruitment(
       message: str(answers.pourquoi_instructrice) || null,
       answers: JSON.stringify({ __formId: form.id, ...answers }),
     });
+    void notifyDiscord(process.env.DISCORD_WEBHOOK_RECRUTEMENT, {
+      title: "⭐ Nouvelle candidature · Staff",
+      color: 0xc9a66b,
+      url: `${SITE_URL}/admin/recrutement`,
+      fields: [
+        { name: "Pseudo SSO", value: pseudo, inline: true },
+        { name: "Discord", value: str(answers.discord) || "—", inline: true },
+        { name: "Type", value: "Staff", inline: true },
+        { name: "Formulaire", value: form.id, inline: true },
+      ],
+      footer: { text: "Queen Pearls — Candidatures" },
+    });
     return { ok: true };
   } catch {
     return {
@@ -152,6 +178,20 @@ export async function submitGuestbook(
       author: parsed.data.author,
       message: parsed.data.message,
       isPublished: false,
+    });
+    const excerpt =
+      parsed.data.message.length > 150
+        ? parsed.data.message.slice(0, 150) + "…"
+        : parsed.data.message;
+    void notifyDiscord(process.env.DISCORD_WEBHOOK_LIVRE_OR, {
+      title: "📖 Nouveau message — Livre d'or",
+      color: 0xe8b4bc,
+      url: `${SITE_URL}/admin/livre-or`,
+      fields: [
+        { name: "Auteur", value: parsed.data.author, inline: true },
+        { name: "Message", value: excerpt },
+      ],
+      footer: { text: "Queen Pearls — Livre d'or · En attente de validation" },
     });
     return { ok: true };
   } catch {
