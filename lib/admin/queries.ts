@@ -2,6 +2,32 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { getResource } from "@/lib/admin/registry";
+import { guestbookEntries, recruitmentApplications } from "@/lib/db/schema";
+
+export type NavBadges = Record<string, number>;
+
+export async function getNavBadges(): Promise<NavBadges> {
+  const badges: NavBadges = {};
+  try {
+    const [recrutement] = await db
+      .select({ c: sql<number>`count(*)` })
+      .from(recruitmentApplications)
+      .where(sql`${recruitmentApplications.status} = 'new'`);
+    badges.recrutement = Number(recrutement?.c ?? 0);
+  } catch {
+    badges.recrutement = 0;
+  }
+  try {
+    const [guestbook] = await db
+      .select({ c: sql<number>`count(*)` })
+      .from(guestbookEntries)
+      .where(sql`${guestbookEntries.status} = 'pending'`);
+    badges["livre-or"] = Number(guestbook?.c ?? 0);
+  } catch {
+    badges["livre-or"] = 0;
+  }
+  return badges;
+}
 
 type Row = Record<string, unknown>;
 

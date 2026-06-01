@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getOutfits } from "@/lib/data";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
+import { OutfitImage } from "@/components/OutfitImage";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Nos Tenues" };
@@ -42,16 +42,14 @@ export default async function TenuesPage() {
                     i % 2 === 1 ? "md:flex-row-reverse" : ""
                   }`}
                 >
-                  <div className="qp-card relative aspect-[3/4] w-full overflow-hidden md:w-1/2">
-                    {o.imageUrl ? (
-                      <Image src={o.imageUrl} alt={o.name} fill className="object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-rose/50 to-or/20 qp-title text-3xl text-or-deep/60">
-                        {o.name}
-                      </div>
-                    )}
-                  </div>
-                  <div className="md:w-1/2">
+                  {o.imageUrl ? (
+                    <OutfitImage src={o.imageUrl} alt={o.name} />
+                  ) : (
+                    <div className="qp-card relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-gradient-to-br from-rose/50 to-or/20 qp-title text-3xl text-or-deep/60 md:w-3/5">
+                      {o.name}
+                    </div>
+                  )}
+                  <div className="md:w-2/5">
                     <h2 className="qp-title text-4xl text-ink">{o.name}</h2>
                     {o.description && (
                       <p className="mt-4 font-serif text-lg leading-relaxed text-ink/80">
