@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { admins } from "@/lib/db/schema";
+import { admins, rolePermissions } from "@/lib/db/schema";
 import { verifyPassword } from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
+import type { ModuleKey } from "@/lib/auth/permissions";
 
 type Attempt = { count: number; first: number };
 const attempts = new Map<string, Attempt>();
@@ -54,7 +55,13 @@ export async function POST(request: NextRequest) {
   }
 
   const [admin] = await db
-    .select()
+    .select({
+      id: admins.id,
+      username: admins.username,
+      passwordHash: admins.passwordHash,
+      isEnabled: admins.isEnabled,
+      roleId: admins.roleId,
+    })
     .from(admins)
     .where(eq(admins.username, username))
     .limit(1);
@@ -66,7 +73,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await createSession(admin.id, admin.username);
+  // isEnabled: NULL (colonnes pas encore migrées) → autorisé ; false → bloqué
+  if (admin.isEnabled === false) {
+    return NextResponse.json(
+      { error: "Ce compte est désactivé. Contactez un administrateur." },
+      { status: 403 },
+    );
+  }
+
+  // roleId null = compte legacy (avant migration) → on autorise avec permissions vides
+  const permissions: ModuleKey[] = [];
+  if (admin.roleId) {
+    const perms = await db
+      .select({ moduleKey: rolePermissions.moduleKey })
+      .from(rolePermissions)
+      .where(eq(rolePermissions.roleId, admin.roleId));
+    permissions.push(...perms.map((p) => p.moduleKey as ModuleKey));
+  }
+
+  await createSession(admin.id, admin.username, admin.roleId, permissions);
   attempts.delete(ip);
 
   return NextResponse.json({ ok: true });

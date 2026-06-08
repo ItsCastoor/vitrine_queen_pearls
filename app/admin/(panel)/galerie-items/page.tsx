@@ -5,6 +5,7 @@ import { galleryItems, type GalleryItem } from "@/lib/db/schema";
 import { deleteResource } from "@/app/admin/actions";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { getGalleryCategories } from "@/lib/admin/gallery-helpers";
+import { requirePermission } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ async function getItems(): Promise<GalleryItem[]> {
 }
 
 export default async function GalleryItemsListPage() {
+  await requirePermission("galerie-items");
   const items = await getItems();
   const categories = await getGalleryCategories();
   const catMap = new Map(categories.map((c) => [c.id, c.name]));

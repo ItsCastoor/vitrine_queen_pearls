@@ -33,6 +33,18 @@ export const getPublishedPosts = () =>
     [],
   );
 
+export const getLatestPosts = (limit = 3) =>
+  safe(
+    () =>
+      db
+        .select()
+        .from(posts)
+        .where(eq(posts.isDraft, false))
+        .orderBy(desc(posts.publishedAt))
+        .limit(limit),
+    [],
+  );
+
 export const getPostBySlug = (slug: string) =>
   safe(
     async () => {

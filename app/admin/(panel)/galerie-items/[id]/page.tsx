@@ -8,6 +8,7 @@ import {
   getGalleryCategories,
   getCategoryOptions,
 } from "@/lib/admin/gallery-helpers";
+import { requirePermission } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function EditGalleryItemPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requirePermission("galerie-items");
   const { id } = await params;
   const resource = getResource("galerie-items");
   if (!resource) notFound();

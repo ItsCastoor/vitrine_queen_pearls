@@ -10,7 +10,7 @@ import {
   timestamp,
   mysqlEnum,
 } from "drizzle-orm/mysql-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 const id = () => bigint("id", { mode: "number", unsigned: true }).autoincrement().primaryKey();
 
@@ -19,13 +19,55 @@ const createdAt = () =>
 const updatedAt = () =>
   timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`).onUpdateNow();
 
+/* ─── Rôles & permissions ─────────────────────────────────────────────────── */
+
+export const roles = mysqlTable("roles", {
+  id: id(),
+  name: varchar("name", { length: 64 }).notNull().unique(),
+  description: text("description"),
+  createdAt: createdAt(),
+});
+
+/**
+ * Une ligne = un module accordé à un rôle.
+ * Si aucune ligne n'existe pour un (roleId, moduleKey), l'accès est refusé.
+ */
+export const rolePermissions = mysqlTable("role_permissions", {
+  id: id(),
+  roleId: bigint("role_id", { mode: "number", unsigned: true }).notNull(),
+  moduleKey: varchar("module_key", { length: 64 }).notNull(),
+});
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  permissions: many(rolePermissions),
+  admins: many(admins),
+}));
+
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, { fields: [rolePermissions.roleId], references: [roles.id] }),
+}));
+
+/* ─── Admins ──────────────────────────────────────────────────────────────── */
+
 export const admins = mysqlTable("admins", {
   id: id(),
   username: varchar("username", { length: 64 }).notNull().unique(),
-  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull().default(""),
+  /** Désactiver la connexion sans supprimer le compte. */
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  /** Rôle attribué — obligatoire pour accéder à l'admin. */
+  roleId: bigint("role_id", { mode: "number", unsigned: true }),
+  /** Lien optionnel vers la fiche membre publique (table staff). */
+  staffId: bigint("staff_id", { mode: "number", unsigned: true }),
+  /** Token à usage unique pour la création du mot de passe au premier accès. Effacé après usage. */
+  setupToken: varchar("setup_token", { length: 64 }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
+
+export const adminsRelations = relations(admins, ({ one }) => ({
+  role: one(roles, { fields: [admins.roleId], references: [roles.id] }),
+}));
 
 export const siteSettings = mysqlTable("site_settings", {
   key: varchar("key", { length: 128 }).primaryKey(),
@@ -161,6 +203,8 @@ export const media = mysqlTable("media", {
   uploadedAt: createdAt(),
 });
 
+export type Role = typeof roles.$inferSelect;
+export type RolePermission = typeof rolePermissions.$inferSelect;
 export type Admin = typeof admins.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type EventRow = typeof events.$inferSelect;

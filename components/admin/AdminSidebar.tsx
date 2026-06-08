@@ -4,17 +4,22 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { RESOURCE_NAV } from "@/lib/admin/registry";
+import type { ModuleKey } from "@/lib/auth/permissions";
 
 export function AdminSidebar({
   username,
   badges = {},
+  permissions = [],
 }: {
   username: string;
   badges?: Record<string, number>;
+  permissions?: ModuleKey[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  const can = (key: string) => permissions.includes(key as ModuleKey);
 
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -39,15 +44,17 @@ export function AdminSidebar({
     );
   };
 
+  const visibleResources = RESOURCE_NAV.filter((r) => can(r.key));
+
   return (
-    <aside className="w-full shrink-0 border-b border-or/20 bg-nacre lg:w-64 lg:border-r lg:border-b-0">
+    <aside className="w-full shrink-0 border-b border-or/20 bg-nacre lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:overflow-y-auto lg:border-r lg:border-b-0">
       <div className="flex items-center justify-between px-6 py-5">
         <Link href="/admin" className="flex items-center gap-2">
           <span className="qp-pearl" />
           <span className="qp-title text-xl text-ink">Pearls Admin</span>
         </Link>
         <button
-          className="qp-navlink lg:hidden"
+          className="qp-navlink rounded-full px-2 py-1 lg:hidden"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? "Fermer" : "Menu"}
@@ -59,18 +66,32 @@ export function AdminSidebar({
           Tableau de bord
         </Link>
 
-        <p className="qp-overline mt-5 mb-2 px-4">Contenu</p>
-        {RESOURCE_NAV.map((r) => (
-          <Link key={r.key} href={`/admin/${r.key}`} className={linkClass(`/admin/${r.key}`)}>
-            <span>{r.label}</span>
-            {badge(r.key)}
-          </Link>
-        ))}
+        {visibleResources.length > 0 && (
+          <>
+            <p className="qp-overline mt-5 mb-2 px-4">Contenu</p>
+            {visibleResources.map((r) => (
+              <Link key={r.key} href={`/admin/${r.key}`} className={linkClass(`/admin/${r.key}`)}>
+                <span>{r.label}</span>
+                {badge(r.key)}
+              </Link>
+            ))}
+          </>
+        )}
 
         <p className="qp-overline mt-5 mb-2 px-4">Réglages</p>
         <Link href="/admin/parametres" className={linkClass("/admin/parametres")}>
           Paramètres
         </Link>
+        {can("membres") && (
+          <Link href="/admin/membres" className={linkClass("/admin/membres")}>
+            Comptes admin
+          </Link>
+        )}
+        {can("roles") && (
+          <Link href="/admin/roles" className={linkClass("/admin/roles")}>
+            Rôles &amp; permissions
+          </Link>
+        )}
         <Link href="/" className="block rounded-lg px-4 py-2 text-sm text-ink/70 hover:bg-rose/40">
           Voir le site ↗
         </Link>

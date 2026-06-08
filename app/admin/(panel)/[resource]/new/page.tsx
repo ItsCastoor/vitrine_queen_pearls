@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getResource } from "@/lib/admin/registry";
 import { saveResource } from "@/app/admin/actions";
 import { ResourceForm } from "@/components/admin/ResourceForm";
+import { requirePermission } from "@/lib/auth/permissions";
+import type { ModuleKey } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +16,8 @@ export default async function NewResourcePage({
   const { resource: resourceKey } = await params;
   const resource = getResource(resourceKey);
   if (!resource || resource.canCreate === false) notFound();
+
+  await requirePermission(resourceKey as ModuleKey);
 
   const action = saveResource.bind(null, resourceKey, null);
 

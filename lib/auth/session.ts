@@ -2,10 +2,14 @@ import "server-only";
 import { getIronSession, type SessionOptions } from "iron-session";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import type { ModuleKey } from "./permissions";
 
 export interface AdminSession {
   adminId?: number;
   username?: string;
+  roleId?: number;
+  /** Liste des moduleKey accessibles pour cet admin. */
+  permissions?: ModuleKey[];
 }
 
 function sessionOptions(): SessionOptions {
@@ -33,11 +37,18 @@ export async function getSession(): Promise<AdminSession> {
   return getIronSession<AdminSession>(cookieStore, sessionOptions());
 }
 
-export async function createSession(adminId: number, username: string): Promise<void> {
+export async function createSession(
+  adminId: number,
+  username: string,
+  roleId: number | null,
+  permissions: ModuleKey[],
+): Promise<void> {
   const cookieStore = await cookies();
   const session = await getIronSession<AdminSession>(cookieStore, sessionOptions());
   session.adminId = adminId;
   session.username = username;
+  session.roleId = roleId ?? undefined;
+  session.permissions = permissions;
   await session.save();
 }
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getAllSettings, getSetting } from "@/lib/settings";
-import { getHighlightEvents, getHomeGalleryImages } from "@/lib/data";
+import { getHighlightEvents, getHomeGalleryImages, getLatestPosts } from "@/lib/data";
 import { HomeGallery } from "@/components/HomeGallery";
 import { formatDate } from "@/lib/format";
 import { PearlDivider } from "@/components/PearlDivider";
@@ -13,6 +13,7 @@ export default async function HomePage() {
   const settings = await getAllSettings();
   const events = await getHighlightEvents();
   const gallery = await getHomeGalleryImages(3);
+  const latestPosts = await getLatestPosts(3);
 
   const heroTitle = getSetting(settings, "home.hero_title");
   const tagline = getSetting(settings, "home.hero_tagline");
@@ -84,6 +85,60 @@ export default async function HomePage() {
             Galerie à venir — ajoutez vos images depuis l&apos;espace privé
           </p>
         )}
+      </section>
+
+      {/* DERNIÈRES ACTUALITÉS */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <SectionTitle
+          overline="Journal"
+          title="Dernières actualités"
+          subtitle="Les nouvelles fraîches de la maison Queen Pearls."
+        />
+        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+          {latestPosts.length === 0 ? (
+            <div className="qp-card col-span-full p-10 text-center font-serif text-lg text-greypearl">
+              Les actualités arrivent bientôt — revenez vite ✨
+            </div>
+          ) : (
+            latestPosts.map((p) => (
+              <Link
+                key={p.id}
+                href={`/journal/${p.slug}`}
+                className="qp-card flex flex-col overflow-hidden"
+              >
+                <div className="relative aspect-video">
+                  {p.coverUrl ? (
+                    <Image
+                      src={p.coverUrl}
+                      alt={p.title}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-rose/50 to-or/20" />
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col p-6">
+                  <p className="qp-overline mb-2">{formatDate(p.publishedAt)}</p>
+                  <h3 className="qp-title text-2xl text-ink">{p.title}</h3>
+                  {p.excerpt && (
+                    <p className="mt-2 line-clamp-3 flex-1 text-sm text-greypearl">
+                      {p.excerpt}
+                    </p>
+                  )}
+                  <span className="mt-4 text-xs uppercase tracking-widest text-or-deep">
+                    Lire la suite →
+                  </span>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+        <div className="mt-10 text-center">
+          <Link href="/journal" className="qp-btn">
+            Toutes les actualités
+          </Link>
+        </div>
       </section>
 
       {/* PROCHAINS ÉVÉNEMENTS */}

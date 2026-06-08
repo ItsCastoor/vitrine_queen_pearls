@@ -1,7 +1,8 @@
 import { getAllSettings } from "@/lib/settings";
 import { saveSettings } from "@/app/admin/actions";
 import { PasswordForm } from "@/components/admin/PasswordForm";
-import { PearlDivider } from "@/components/PearlDivider";
+import { requireAdmin } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -31,56 +32,66 @@ export default async function ParametresPage({
 }: {
   searchParams: Promise<{ saved?: string }>;
 }) {
+  await requireAdmin();
+  const canEdit = await hasPermission("parametres");
   const { saved } = await searchParams;
-  const settings = await getAllSettings();
+  const settings = canEdit ? await getAllSettings() : {};
 
   return (
     <div>
       <p className="qp-overline mb-1">Réglages</p>
       <h1 className="qp-title text-4xl text-ink">Paramètres</h1>
       <p className="mt-2 font-serif text-lg text-greypearl">
-        Modifiez les textes des pages et votre mot de passe.
+        {canEdit ? "Modifiez les textes des pages et votre mot de passe." : "Changez votre mot de passe."}
       </p>
 
       {saved && (
         <p className="mt-4 text-sm text-or-deep">Textes enregistrés ✔</p>
       )}
 
-      <h2 className="qp-title mt-10 text-2xl text-ink">Textes du site</h2>
-      <form action={saveSettings} className="qp-card mt-4 max-w-3xl space-y-5 p-8">
-        {TEXT_FIELDS.map((f) => (
-          <div key={f.key}>
-            <label className="qp-overline mb-2 block">{f.label}</label>
-            {f.long ? (
-              <textarea
-                name={f.key}
-                rows={3}
-                defaultValue={settings[f.key] ?? ""}
-                className={inputClass}
-              />
-            ) : (
-              <input
-                name={f.key}
-                type="text"
-                defaultValue={settings[f.key] ?? ""}
-                className={inputClass}
-              />
-            )}
+      <div className="mt-10 flex flex-col gap-10 lg:flex-row lg:items-start">
+        {/* Colonne gauche — Textes (visible seulement si permission) */}
+        {canEdit && (
+          <div className="flex-1 min-w-0">
+            <h2 className="qp-title text-2xl text-ink">Textes du site</h2>
+            <form action={saveSettings} className="qp-card mt-4 space-y-5 p-8">
+              {TEXT_FIELDS.map((f) => (
+                <div key={f.key}>
+                  <label className="qp-overline mb-2 block">{f.label}</label>
+                  {f.long ? (
+                    <textarea
+                      name={f.key}
+                      rows={3}
+                      defaultValue={settings[f.key] ?? ""}
+                      className={inputClass}
+                    />
+                  ) : (
+                    <input
+                      name={f.key}
+                      type="text"
+                      defaultValue={settings[f.key] ?? ""}
+                      className={inputClass}
+                    />
+                  )}
+                </div>
+              ))}
+              <button type="submit" className="qp-btn qp-btn--solid">
+                Enregistrer les textes
+              </button>
+            </form>
           </div>
-        ))}
-        <button type="submit" className="qp-btn qp-btn--solid">
-          Enregistrer les textes
-        </button>
-      </form>
+        )}
 
-      <PearlDivider />
-
-      <h2 className="qp-title text-2xl text-ink">Sécurité</h2>
-      <p className="mt-2 text-sm text-greypearl">
-        Changez le mot de passe du compte administrateur.
-      </p>
-      <div className="mt-4">
-        <PasswordForm />
+        {/* Colonne droite — Sécurité (toujours visible) */}
+        <div className={canEdit ? "w-full lg:w-80 shrink-0" : "w-full"}>
+          <h2 className="qp-title text-2xl text-ink">Sécurité</h2>
+          <p className="mt-2 text-sm text-greypearl">
+            Changez le mot de passe du compte administrateur.
+          </p>
+          <div className="mt-4">
+            <PasswordForm />
+          </div>
+        </div>
       </div>
     </div>
   );

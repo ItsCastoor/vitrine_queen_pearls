@@ -5,6 +5,8 @@ import { listRows } from "@/lib/admin/queries";
 import { deleteResource } from "@/app/admin/actions";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { formatDate } from "@/lib/format";
+import { requirePermission } from "@/lib/auth/permissions";
+import type { ModuleKey } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +26,8 @@ export default async function ResourceListPage({
   const { resource: resourceKey } = await params;
   const resource = getResource(resourceKey);
   if (!resource) notFound();
+
+  await requirePermission(resourceKey as ModuleKey);
 
   const rows = await listRows(resourceKey);
 

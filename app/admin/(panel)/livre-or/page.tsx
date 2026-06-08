@@ -4,6 +4,7 @@ import { guestbookEntries, type GuestbookEntry } from "@/lib/db/schema";
 import { formatDate } from "@/lib/format";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { setGuestbookStatus, deleteGuestbookEntry } from "./actions";
+import { requirePermission } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,7 @@ function EntryCard({ entry }: { entry: GuestbookEntry }) {
 }
 
 export default async function GuestbookModerationPage() {
+  await requirePermission("livre-or");
   const entries = await getAllEntries();
 
   const groups: {

@@ -10,6 +10,7 @@ import { STAFF_FORMS_BY_ID } from "@/lib/recruitment/staff-forms";
 import type { FormSection } from "@/lib/recruitment/member-form";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { setApplicationStatus, deleteApplication } from "./actions";
+import { requirePermission } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -200,6 +201,7 @@ function ApplicationCard({ app }: { app: RecruitmentApplication }) {
 }
 
 export default async function RecruitmentAdminPage() {
+  await requirePermission("recrutement");
   const apps = await getApplications();
 
   const groups: { key: Status; title: string; subtitle: string }[] = [

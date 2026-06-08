@@ -4,6 +4,8 @@ import { getResource } from "@/lib/admin/registry";
 import { getRow } from "@/lib/admin/queries";
 import { saveResource } from "@/app/admin/actions";
 import { ResourceForm } from "@/components/admin/ResourceForm";
+import { requirePermission } from "@/lib/auth/permissions";
+import type { ModuleKey } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,8 @@ export default async function EditResourcePage({
   const { resource: resourceKey, id } = await params;
   const resource = getResource(resourceKey);
   if (!resource) notFound();
+
+  await requirePermission(resourceKey as ModuleKey);
 
   const row = await getRow(resourceKey, Number(id));
   if (!row) notFound();
