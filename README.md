@@ -65,9 +65,9 @@ Dans un terminal **dédié** (à laisser ouvert pendant tout le développement) 
 ssh -N -L 3307:127.0.0.1:3306 <user>@<host-distant>
 ```
 
-| Option              | Rôle                                                          |
-|---------------------|---------------------------------------------------------------|
-| `-N`                | N'exécute aucune commande distante, sert juste à porter le tunnel |
+| Option                   | Rôle                                                                   |
+|--------------------------|------------------------------------------------------------------------|
+| `-N`                     | N'exécute aucune commande distante, sert juste à porter le tunnel      |
 | `-L 3307:127.0.0.1:3306` | Mappe `localhost:3307` (local) → `127.0.0.1:3306` (sur le serveur SSH) |
 
 Si vous utilisez une clé SSH spécifique :
@@ -183,15 +183,15 @@ Depuis l'espace admin, on peut gérer :
 
 ## 🩺 Dépannage
 
-| Problème                                      | Piste                                                                 |
-|-----------------------------------------------|------------------------------------------------------------------------|
-| `ECONNREFUSED 127.0.0.1:3307`                 | Le tunnel SSH n'est pas ouvert — relancer la commande `ssh -N -L …`    |
-| `ER_ACCESS_DENIED_ERROR`                      | Vérifier `DB_USER` / `DB_PASSWORD` dans `.env.local`                   |
-| Port 3307 déjà utilisé                        | Vérifier qu'aucun autre tunnel/MySQL local ne l'occupe, ou changer le port (mettre à jour `.env.local` ET la commande SSH) |
-| Le tunnel se ferme tout seul                  | Ajouter `-o ServerAliveInterval=60` à la commande SSH                  |
-| Build qui échoue avec `params` synchrones     | Next.js 16 → `params` est async : `const { slug } = await params`      |
+| Problème                                                         | Piste                                                                                                                                                    |
+|------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ECONNREFUSED 127.0.0.1:3307`                                    | Le tunnel SSH n'est pas ouvert — relancer la commande `ssh -N -L …`                                                                                      |
+| `ER_ACCESS_DENIED_ERROR`                                         | Vérifier `DB_USER` / `DB_PASSWORD` dans `.env.local`                                                                                                     |
+| Port 3307 déjà utilisé                                           | Vérifier qu'aucun autre tunnel/MySQL local ne l'occupe, ou changer le port (mettre à jour `.env.local` ET la commande SSH)                               |
+| Le tunnel se ferme tout seul                                     | Ajouter `-o ServerAliveInterval=60` à la commande SSH                                                                                                    |
+| Build qui échoue avec `params` synchrones                        | Next.js 16 → `params` est async : `const { slug } = await params`                                                                                        |
 | Images cassées en prod : `isn't a valid image ... received null` | L'optimiseur `next/image` ne peut pas se requêter derrière le proxy Plesk. Résolu via `images.unoptimized: true` dans `next.config.ts` (déjà configuré). |
-| Images uploadées invisibles après déploiement | Vérifier que `public/uploads/` est **inscriptible** par l'utilisateur Node sur Plesk, et qu'il n'est pas écrasé à chaque déploiement |
+| Images uploadées invisibles après déploiement                    | Vérifier que `public/uploads/` est **inscriptible** par l'utilisateur Node sur Plesk, et qu'il n'est pas écrasé à chaque déploiement                     |
 
 ---
 
