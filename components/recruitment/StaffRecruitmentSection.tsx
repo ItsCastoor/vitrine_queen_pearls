@@ -6,7 +6,7 @@ import { STAFF_FORMS } from "@/lib/recruitment/staff-forms";
 import { submitStaffRecruitment } from "@/app/actions/public";
 import { RecruitmentWizard } from "./RecruitmentWizard";
 
-export function StaffRecruitmentSection() {
+export function StaffRecruitmentSection({ staffOpen = {} }: { staffOpen?: Record<string, boolean> }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -24,14 +24,16 @@ export function StaffRecruitmentSection() {
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {STAFF_FORMS.map((form) => {
           const isActive = form.id === activeId;
+          const isOpen = staffOpen[form.id];
+
           return (
             <article
               key={form.id}
               className={`qp-card overflow-hidden transition ${
-                isActive ? "ring-2 ring-or" : ""
+                isOpen && isActive ? "ring-2 ring-or" : ""
               }`}
             >
-              <div className="relative aspect-[4/5] w-full overflow-hidden">
+              <div className="relative aspect-4/5 w-full overflow-hidden">
                 <Image
                   src={form.image}
                   alt={`Instructrice de ${form.discipline}`}
@@ -45,15 +47,21 @@ export function StaffRecruitmentSection() {
                 <h3 className="qp-title mt-1 text-2xl text-ink">
                   {form.discipline}
                 </h3>
-                <button
-                  type="button"
-                  onClick={() => select(form.id)}
-                  className={`qp-btn mt-5 w-full ${
-                    isActive ? "" : "qp-btn--solid"
-                  }`}
-                >
-                  {isActive ? "Formulaire ouvert ↓" : "Nous rejoindre"}
-                </button>
+                {isOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => select(form.id)}
+                    className={`qp-btn mt-5 w-full ${
+                      isActive ? "" : "qp-btn--solid"
+                    }`}
+                  >
+                    {isActive ? "Formulaire ouvert ↓" : "Nous rejoindre"}
+                  </button>
+                ) : (
+                  <div className="mt-5 px-4 py-2.5 rounded-lg bg-rose/20 text-rose-pearl text-sm font-medium border border-rose-pearl/30">
+                    Candidature fermée
+                  </div>
+                )}
               </div>
             </article>
           );
@@ -61,7 +69,7 @@ export function StaffRecruitmentSection() {
       </div>
 
       <div ref={formRef} className="scroll-mt-24">
-        {active && (
+        {active && staffOpen[active.id] && (
           <div className="mx-auto mt-12 max-w-2xl">
             <h3 className="qp-title text-center text-3xl text-ink">
               {active.title}

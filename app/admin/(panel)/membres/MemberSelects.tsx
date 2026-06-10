@@ -1,6 +1,7 @@
 "use client";
 
 import { changeAdminRole, linkStaffProfile } from "./actions";
+import React from "react";
 
 export function RoleSelect({
   adminId,
@@ -29,7 +30,7 @@ export function RoleSelect({
           <option key={r.id} value={r.id}>{r.name}</option>
         ))}
       </select>
-      <button type="submit" className="qp-btn !py-1.5 !px-3 !text-xs">
+      <button type="submit" className="qp-btn py-1.5! px-3! text-xs!">
         Appliquer
       </button>
     </form>
@@ -63,7 +64,7 @@ export function StaffSelect({
           <option key={s.id} value={s.id}>{s.name}</option>
         ))}
       </select>
-      <button type="submit" className="qp-btn !py-1.5 !px-3 !text-xs">
+      <button type="submit" className="qp-btn py-1.5! px-3! text-xs!">
         Lier
       </button>
     </form>

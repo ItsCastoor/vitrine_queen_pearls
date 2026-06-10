@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
+import type {Metadata} from "next";
 import Image from "next/image";
-import { getStaff } from "@/lib/data";
-import { PageHeader } from "@/components/PageHeader";
-import { EmptyState } from "@/components/EmptyState";
-import { PearlDivider } from "@/components/PearlDivider";
-import { StaffRecruitmentSection } from "@/components/recruitment/StaffRecruitmentSection";
+import {getStaff, getStaffRecruitmentStatus} from "@/lib/data";
+import {PageHeader} from "@/components/PageHeader";
+import {EmptyState} from "@/components/EmptyState";
+import {PearlDivider} from "@/components/PearlDivider";
+import {StaffRecruitmentSection} from "@/components/recruitment/StaffRecruitmentSection";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Équipe" };
 
 export default async function EquipePage() {
   const members = await getStaff();
+  const staffRecruitmentStatus = await getStaffRecruitmentStatus();
 
   return (
     <>
@@ -65,7 +66,7 @@ export default async function EquipePage() {
           </p>
         </div>
         <div className="mt-10">
-          <StaffRecruitmentSection />
+          <StaffRecruitmentSection staffOpen={staffRecruitmentStatus} />
         </div>
       </section>
     </>

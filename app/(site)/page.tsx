@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getAllSettings, getSetting } from "@/lib/settings";
-import { getHighlightEvents, getHomeGalleryImages, getLatestPosts } from "@/lib/data";
+import { getHighlightEvents, getHomeGalleryImages, getLatestPosts, isRecruitmentOpen } from "@/lib/data";
 import { HomeGallery } from "@/components/HomeGallery";
 import { formatDate } from "@/lib/format";
 import { PearlDivider } from "@/components/PearlDivider";
@@ -14,6 +14,7 @@ export default async function HomePage() {
   const events = await getHighlightEvents();
   const gallery = await getHomeGalleryImages(3);
   const latestPosts = await getLatestPosts(3);
+  const membersOpen = await isRecruitmentOpen("members");
 
   const heroTitle = getSetting(settings, "home.hero_title");
   const tagline = getSetting(settings, "home.hero_tagline");
@@ -32,7 +33,7 @@ export default async function HomePage() {
           priority
           className="-z-20 object-cover object-center opacity-100"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-nacre/70 via-nacre/60 to-nacre/85" />
+        <div className="absolute inset-0 -z-10 bg-linear-to-b from-nacre/70 via-nacre/60 to-nacre/85" />
         <div className="absolute inset-0 -z-10 opacity-40 [background:radial-gradient(circle_at_50%_20%,rgba(201,166,107,0.25),transparent_60%)]" />
 
         <div className="mx-auto max-w-4xl">
@@ -69,9 +70,9 @@ export default async function HomePage() {
     {[0, 1, 2].map((i) => (
       <div
         key={i}
-        className="qp-card relative aspect-[3/4] overflow-hidden"
+        className="qp-card relative aspect-3/4 overflow-hidden"
       >
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-rose/50 to-or/20">
+        <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-rose/50 to-or/20">
           <span className="qp-title text-3xl text-or-deep/70">
             Queen Pearls
           </span>
@@ -115,7 +116,7 @@ export default async function HomePage() {
                       className="object-cover"
                     />
                   ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-rose/50 to-or/20" />
+                    <div className="h-full w-full bg-linear-to-br from-rose/50 to-or/20" />
                   )}
                 </div>
                 <div className="flex flex-1 flex-col p-6">
@@ -169,7 +170,7 @@ export default async function HomePage() {
                       className="object-cover"
                     />
                   ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-rose/50 to-or/20" />
+                    <div className="h-full w-full bg-linear-to-br from-rose/50 to-or/20" />
                   )}
                 </div>
                 <div className="p-6">
@@ -193,16 +194,22 @@ export default async function HomePage() {
       </section>
 
       {/* APPEL FINAL */}
-      <section className="bg-gradient-to-b from-transparent to-rose/40 px-6 py-24 text-center">
+      <section className="bg-linear-to-b from-transparent to-rose/40 px-6 py-24 text-center">
         <SectionTitle
           overline="Rejoignez-nous"
           title="Et si votre perle rejoignait le collier ?"
           subtitle="Les Queen Pearls accueillent les âmes passionnées et élégantes."
         />
         <div className="mt-10">
-          <Link href="/recrutement" className="qp-btn qp-btn--solid">
-            {cta}
-          </Link>
+          {membersOpen ? (
+            <Link href="/recrutement" className="qp-btn qp-btn--solid">
+              {cta}
+            </Link>
+          ) : (
+            <div className="qp-btn qp-btn--solid pointer-events-none opacity-50 cursor-not-allowed inline-block">
+              {cta} (Fermé)
+            </div>
+          )}
         </div>
       </section>
     </>

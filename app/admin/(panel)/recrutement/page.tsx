@@ -4,12 +4,13 @@ import {
   recruitmentApplications,
   type RecruitmentApplication,
 } from "@/lib/db/schema";
+import { getAllSettings } from "@/lib/settings";
 import { formatDate } from "@/lib/format";
 import { MEMBER_FORM } from "@/lib/recruitment/member-form";
 import { STAFF_FORMS_BY_ID } from "@/lib/recruitment/staff-forms";
 import type { FormSection } from "@/lib/recruitment/member-form";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { setApplicationStatus, deleteApplication } from "./actions";
+import { setApplicationStatus, deleteApplication, toggleRecruitmentStatus } from "./actions";
 import { requirePermission } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
@@ -203,6 +204,12 @@ function ApplicationCard({ app }: { app: RecruitmentApplication }) {
 export default async function RecruitmentAdminPage() {
   await requirePermission("recrutement");
   const apps = await getApplications();
+  const settings = await getAllSettings();
+
+  const memberOpen = settings["recruitment.open_members"] === "true" || settings["recruitment.open_members"] === "1";
+  const dressageOpen = settings["recruitment.open_staff_dressage"] === "true" || settings["recruitment.open_staff_dressage"] === "1";
+  const sautOpen = settings["recruitment.open_staff_saut"] === "true" || settings["recruitment.open_staff_saut"] === "1";
+  const westernOpen = settings["recruitment.open_staff_western"] === "true" || settings["recruitment.open_staff_western"] === "1";
 
   const groups: { key: Status; title: string; subtitle: string }[] = [
     { key: "new", title: "Nouvelles candidatures", subtitle: "À étudier" },
@@ -222,12 +229,77 @@ export default async function RecruitmentAdminPage() {
         </p>
       </div>
 
+      {/* Contrôles d'ouverture/fermeture */}
+      <div className="mt-8 space-y-6">
+        <div>
+          <h3 className="qp-title text-lg text-ink mb-3">Candidatures membres</h3>
+          <form action={toggleRecruitmentStatus.bind(null, "recruitment.open_members")} className="qp-card flex items-center justify-between gap-4 p-4">
+            <div>
+              <p className="font-medium text-ink">Recrutement</p>
+              <p className="text-xs text-greypearl">{memberOpen ? "Ouvert" : "Fermé"}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className={`inline-flex items-center justify-center rounded-full w-10 h-10 ${memberOpen ? "bg-emerald-100" : "bg-rose/20"}`}>
+                <span className={`text-lg font-bold ${memberOpen ? "text-emerald-700" : "text-rose-pearl"}`}>
+                  {memberOpen ? "✓" : "✕"}
+                </span>
+              </div>
+              <button
+                type="submit"
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  memberOpen
+                    ? "bg-rose/20 text-rose-pearl hover:bg-rose/30"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+              >
+                {memberOpen ? "Fermer" : "Ouvrir"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div>
+          <h3 className="qp-title text-lg text-ink mb-3">Candidatures staff (par discipline)</h3>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { key: "recruitment.open_staff_dressage", label: "Dressage", isOpen: dressageOpen },
+              { key: "recruitment.open_staff_saut", label: "Saut", isOpen: sautOpen },
+              { key: "recruitment.open_staff_western", label: "Western", isOpen: westernOpen },
+            ].map((item) => (
+              <form key={item.key} action={toggleRecruitmentStatus.bind(null, item.key)} className="qp-card flex items-center justify-between gap-3 p-4">
+                <div>
+                  <p className="font-medium text-ink text-sm">{item.label}</p>
+                  <p className="text-xs text-greypearl">{item.isOpen ? "Ouvert" : "Fermé"}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`inline-flex items-center justify-center rounded-full w-9 h-9 ${item.isOpen ? "bg-emerald-100" : "bg-rose/20"}`}>
+                    <span className={`text-sm font-bold ${item.isOpen ? "text-emerald-700" : "text-rose-pearl"}`}>
+                      {item.isOpen ? "✓" : "✕"}
+                    </span>
+                  </div>
+                  <button
+                    type="submit"
+                    className={`rounded-lg px-2.5 py-1 text-xs font-medium transition whitespace-nowrap ${
+                      item.isOpen
+                        ? "bg-rose/20 text-rose-pearl hover:bg-rose/30"
+                        : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    }`}
+                  >
+                    {item.isOpen ? "Fermer" : "Ouvrir"}
+                  </button>
+                </div>
+              </form>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {apps.length === 0 ? (
         <div className="qp-card mt-8 p-10 text-center font-serif text-greypearl">
           Aucune candidature reçue pour l&apos;instant.
         </div>
       ) : (
-        <div className="mt-8 space-y-12">
+        <div className="mt-12 space-y-12">
           {groups.map((group) => {
             const list = apps.filter((a) => a.status === group.key);
             return (

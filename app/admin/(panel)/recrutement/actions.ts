@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { recruitmentApplications, staff } from "@/lib/db/schema";
+import { recruitmentApplications, staff, siteSettings } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth/session";
 
 type Status = "new" | "read" | "accepted" | "rejected";
@@ -11,6 +11,28 @@ type Status = "new" | "read" | "accepted" | "rejected";
 function parseAnswers(raw: string | null): Record<string, unknown> {
   if (!raw) return {};
   try { return JSON.parse(raw); } catch { return {}; }
+}
+
+export async function toggleRecruitmentStatus(settingKey: string): Promise<void> {
+  await requireAdmin();
+  
+  const [current] = await db
+    .select({ value: siteSettings.value })
+    .from(siteSettings)
+    .where(eq(siteSettings.key, settingKey))
+    .limit(1);
+
+  const isCurrentlyOpen = current?.value === "true" || current?.value === "1";
+  const newValue = isCurrentlyOpen ? "false" : "true";
+
+  await db
+    .insert(siteSettings)
+    .values({ key: settingKey, value: newValue })
+    .onDuplicateKeyUpdate({ set: { value: newValue } });
+
+  revalidatePath("/admin/recrutement");
+  revalidatePath("/recrutement");
+  revalidatePath("/equipe");
 }
 
 export async function setApplicationStatus(

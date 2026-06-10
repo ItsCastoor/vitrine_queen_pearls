@@ -134,7 +134,7 @@ export function ResourceForm({
                   name={f.name}
                   type="checkbox"
                   defaultChecked={Boolean(v)}
-                  className="h-5 w-5 accent-[color:var(--qp-or)]"
+                  className="h-5 w-5 accent-or"
                 />
                 <span className="text-sm text-ink/70">Oui</span>
               </label>

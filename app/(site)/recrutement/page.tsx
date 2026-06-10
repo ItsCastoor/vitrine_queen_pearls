@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getAllSettings, getSetting } from "@/lib/settings";
-import { getFaq } from "@/lib/data";
+import { getFaq, isRecruitmentOpen } from "@/lib/data";
 import { PageHeader } from "@/components/PageHeader";
 import { PearlDivider } from "@/components/PearlDivider";
 import { MemberRecruitmentForm } from "@/components/recruitment/MemberRecruitmentForm";
@@ -11,6 +11,7 @@ export const metadata: Metadata = { title: "Recrutement" };
 export default async function RecrutementPage() {
   const s = await getAllSettings();
   const faq = await getFaq();
+  const membersOpen = await isRecruitmentOpen("members");
 
   const attentes = [
     "Une présence régulière et bienveillante",
@@ -78,9 +79,21 @@ export default async function RecrutementPage() {
           <p className="mt-2 text-center font-serif text-lg text-greypearl">
             Réponds avec sérieux et sincérité — la sélection est renforcée.
           </p>
-          <div className="mt-8">
-            <MemberRecruitmentForm />
-          </div>
+          {membersOpen ? (
+              <div className="mt-8">
+                <MemberRecruitmentForm />
+              </div>
+          ) : (
+              <div className="qp-card bg-rose/20 border border-rose-pearl/30 p-8 text-center">
+                <p className="qp-overline text-rose-pearl">Recrutement actuellement fermé</p>
+                <p className="mt-3 font-serif text-lg text-ink">
+                  Les candidatures pour les membres sont actuellement fermées.
+                </p>
+                <p className="mt-2 text-sm text-greypearl">
+                  Revenez bientôt pour la prochaine session de recrutement ! ✨
+                </p>
+              </div>
+          )}
         </div>
 
         {faq.length > 0 && (

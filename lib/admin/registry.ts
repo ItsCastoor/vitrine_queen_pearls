@@ -22,7 +22,8 @@ export type FieldType =
   | "date"
   | "datetime"
   | "image"
-  | "select";
+  | "select"
+  | "role-fields";
 
 export interface FieldDef {
   name: string;

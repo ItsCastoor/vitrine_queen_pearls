@@ -3,6 +3,7 @@
 import { useActionState, useMemo, useRef, useState } from "react";
 import type { FormSection, Question } from "@/lib/recruitment/member-form";
 import type { ActionState } from "@/app/actions/public";
+import type { RecruitmentRole } from "@/lib/db/schema";
 
 const initial: ActionState = { ok: false };
 
@@ -33,14 +34,17 @@ function QuestionField({
   onChange,
   error,
   allAnswers,
+  roles = [],
 }: {
   question: Question;
   value: string | string[] | undefined;
   onChange: (v: string | string[]) => void;
   error?: string;
   allAnswers: Answers;
+  roles?: RecruitmentRole[];
 }) {
   const isRequired = isQuestionRequired(question, allAnswers);
+  const isRoleQuestion = question.id === "role_id" && roles.length > 0;
 
   return (
     <fieldset className="space-y-2">
@@ -52,7 +56,42 @@ function QuestionField({
         <p className="text-sm text-greypearl">{question.help}</p>
       )}
 
-      {question.type === "short" && (
+      {/* Special rendering for role selection with descriptions */}
+      {isRoleQuestion && (
+        <div className="space-y-3">
+          {roles.map((role) => (
+            <label
+              key={role.id}
+              className={`flex cursor-pointer items-start gap-4 rounded-lg border p-4 transition ${
+                value === String(role.id)
+                  ? "border-or bg-or/10"
+                  : "border-or/20 bg-white/50 hover:border-or/50"
+              }`}
+            >
+              <input
+                type="radio"
+                name={question.id}
+                className="mt-1 accent-or"
+                checked={value === String(role.id)}
+                onChange={() => onChange(String(role.id))}
+              />
+              <div className="flex-1">
+                <div className="font-serif text-lg font-semibold text-ink">
+                  {role.name}
+                </div>
+                {role.description && (
+                  <p className="mt-1 text-sm text-ink/70">
+                    {role.description}
+                  </p>
+                )}
+              </div>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* Standard radio rendering (not for roles) */}
+      {!isRoleQuestion && question.type === "short" && (
         <input
           className={inputClass}
           value={(value as string) ?? ""}
@@ -60,7 +99,7 @@ function QuestionField({
         />
       )}
 
-      {question.type === "para" && (
+      {!isRoleQuestion && question.type === "para" && (
         <textarea
           rows={4}
           className={inputClass}
@@ -69,7 +108,7 @@ function QuestionField({
         />
       )}
 
-      {question.type === "radio" && (
+      {!isRoleQuestion && question.type === "radio" && (
         <div className="space-y-2">
           {question.options?.map((opt) => (
             <label
@@ -134,6 +173,7 @@ export function RecruitmentWizard({
   formTitle,
   action,
   formId,
+  roles = [],
   successTitle = "Candidature envoyée 🤍",
   successMessage = "Merci pour ta candidature aux Queen Pearls. Le staff l'étudiera avec soin et reviendra vers toi sur Discord.",
 }: {
@@ -141,6 +181,7 @@ export function RecruitmentWizard({
   formTitle: string;
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   formId?: string;
+  roles?: string;
   successTitle?: string;
   successMessage?: string;
 }) {
@@ -150,8 +191,74 @@ export function RecruitmentWizard({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLFormElement>(null);
 
-  const total = sections.length;
-  const section = sections[step];
+  // Parse custom fields from selected role
+  const selectedRoleId = answers.role_id ? String(answers.role_id) : null;
+  const selectedRole = selectedRoleId
+    ? roles.find((r) => String(r.id) === selectedRoleId)
+    : null;
+
+  type RoleField = {
+    id: string;
+    label: string;
+    type: "short" | "para" | "radio" | "checkbox";
+    required: boolean;
+    options?: string[];
+  };
+
+  let roleCustomFields: RoleField[] = [];
+  if (selectedRole?.requiredFields) {
+    try {
+      roleCustomFields = JSON.parse(selectedRole.requiredFields);
+    } catch {
+      roleCustomFields = [];
+    }
+  }
+
+  // Sections de base (stables) : on injecte la question du rôle dans la page 1
+  const baseSections: FormSection[] = useMemo(() => {
+    if (roles.length === 0) return sections;
+    const roleQuestion: Question = {
+      id: "role_id",
+      label: "Pour quel rôle postules-tu ?",
+      type: "radio",
+      required: true,
+      options: roles.map((r) => String(r.id)),
+    } as unknown as Question;
+    const firstSection = sections[0];
+    return [
+      { ...firstSection, questions: [roleQuestion, ...firstSection.questions] },
+      ...sections.slice(1),
+    ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sections, roles]);
+
+  // Section dynamique insérée AVANT la dernière section (engagement final)
+  const customSection: FormSection | null = roleCustomFields.length > 0
+    ? {
+        id: "custom-fields",
+        title: selectedRole
+          ? `📋 ${selectedRole.name} — champs spécifiques`
+          : "📋 Champs spécifiques à ton rôle",
+        questions: roleCustomFields.map((rf) => ({
+          id: `custom_${rf.id}`,
+          label: rf.label,
+          type: rf.type,
+          required: rf.required,
+          options: rf.options,
+        } as Question)),
+      }
+    : null;
+
+  const allSections = customSection
+    ? [
+        ...baseSections.slice(0, -1),   // toutes les sections sauf la dernière
+        customSection,                   // champs du rôle
+        baseSections[baseSections.length - 1], // dernière section (engagement final)
+      ]
+    : baseSections;
+
+  const total = allSections.length;
+  const section = allSections[step];
   const isLast = step === total - 1;
   const payload = useMemo(() => JSON.stringify(answers), [answers]);
 
@@ -247,6 +354,7 @@ export function RecruitmentWizard({
             error={errors[q.id]}
             onChange={(v) => setAnswer(q.id, v)}
             allAnswers={answers}
+            roles={roles}
           />
         ))}
       </div>

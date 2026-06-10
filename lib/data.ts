@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   posts,
@@ -12,6 +12,7 @@ import {
   faqEntries,
   hallOfFame,
   guestbookEntries,
+  siteSettings,
 } from "@/lib/db/schema";
 
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
@@ -190,4 +191,53 @@ export const getPublishedGuestbook = () =>
         .where(eq(guestbookEntries.status, "approved"))
         .orderBy(desc(guestbookEntries.createdAt)),
     [],
+  );
+
+export const isRecruitmentOpen = (type: "members" | "staff"): Promise<boolean> =>
+  safe(
+    async () => {
+      const key = type === "members" ? "recruitment.open_members" : "recruitment.open_staff";
+      const [row] = await db
+        .select({ value: siteSettings.value })
+        .from(siteSettings)
+        .where(eq(siteSettings.key, key))
+        .limit(1);
+      return row?.value === "true" || row?.value === "1";
+    },
+    true,
+  );
+
+export const getStaffRecruitmentStatus = (): Promise<Record<string, boolean>> =>
+  safe(
+    async () => {
+      const rows = await db
+        .select({ key: siteSettings.key, value: siteSettings.value })
+        .from(siteSettings)
+        .where(
+          or(
+            eq(siteSettings.key, "recruitment.open_staff_dressage"),
+            eq(siteSettings.key, "recruitment.open_staff_saut"),
+            eq(siteSettings.key, "recruitment.open_staff_western"),
+          ),
+        );
+
+      const status: Record<string, boolean> = {
+        staff_dressage: true,
+        staff_saut: true,
+        staff_western: true,
+      };
+
+      for (const row of rows) {
+        if (row.key === "recruitment.open_staff_dressage") {
+          status.staff_dressage = row.value === "true" || row.value === "1";
+        } else if (row.key === "recruitment.open_staff_saut") {
+          status.staff_saut = row.value === "true" || row.value === "1";
+        } else if (row.key === "recruitment.open_staff_western") {
+          status.staff_western = row.value === "true" || row.value === "1";
+        }
+      }
+
+      return status;
+    },
+    { staff_dressage: true, staff_saut: true, staff_western: true },
   );
