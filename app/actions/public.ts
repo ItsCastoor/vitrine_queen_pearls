@@ -2,8 +2,13 @@
 
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { recruitmentApplications, guestbookEntries } from "@/lib/db/schema";
+import {
+  recruitmentApplications,
+  guestbookEntries,
+  partnershipApplications,
+} from "@/lib/db/schema";
 import { notifyDiscord } from "@/lib/discord";
+import { saveUpload } from "@/lib/uploads";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 import {
@@ -12,6 +17,7 @@ import {
   type MemberAnswers,
 } from "@/lib/recruitment/member-form";
 import { STAFF_FORMS_BY_ID } from "@/lib/recruitment/staff-forms";
+import { validatePartnershipAnswers } from "@/lib/partnership/partnership-form";
 
 const recruitmentSchema = z.object({
   pseudo: z.string().trim().min(2, "Pseudo trop court.").max(120),
@@ -157,6 +163,76 @@ export async function submitStaffRecruitment(
       ok: false,
       error: "Impossible d'envoyer la candidature pour le moment.",
     };
+  }
+}
+
+export async function submitPartnership(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  let answers: MemberAnswers;
+  try {
+    const raw = formData.get("payload");
+    answers = JSON.parse(typeof raw === "string" ? raw : "{}");
+  } catch {
+    return { ok: false, error: "Données du formulaire illisibles." };
+  }
+
+  const validationError = validatePartnershipAnswers(answers);
+  if (validationError) {
+    return { ok: false, error: validationError };
+  }
+
+  const str = (v: unknown) =>
+    typeof v === "string" ? v.trim() : Array.isArray(v) ? v.join(", ") : "";
+
+  const clubName = str(answers.club_nom).slice(0, 191) || "Club";
+
+  // Gestion de l'upload du logo
+  let logoUrl: string | null = null;
+  const logoFile = formData.get("club_logo");
+  if (logoFile instanceof File && logoFile.size > 0) {
+    try {
+      const saved = await saveUpload(logoFile, "partners");
+      logoUrl = saved.url;
+    } catch (e) {
+      return {
+        ok: false,
+        error: e instanceof Error ? e.message : "Erreur lors de l'upload du logo.",
+      };
+    }
+  } else {
+    return { ok: false, error: "Le logo de votre club est obligatoire." };
+  }
+
+  try {
+    await db.insert(partnershipApplications).values({
+      clubName,
+      server: str(answers.serveur).slice(0, 191) || null,
+      contactName: str(answers.responsable).slice(0, 191) || null,
+      contact: str(answers.moyen_contact).slice(0, 255) || null,
+      links: str(answers.lien_reseaux).slice(0, 512) || null,
+      message: str(answers.pourquoi) || null,
+      answers: JSON.stringify(answers),
+      logoUrl,
+    });
+    void notifyDiscord(
+      process.env.DISCORD_WEBHOOK_PARTENARIAT ?? process.env.DISCORD_WEBHOOK_RECRUTEMENT,
+      {
+        title: "🤝 Nouvelle demande de partenariat",
+        color: 0xc9a66b,
+        url: `${SITE_URL}/admin/partenaires`,
+        fields: [
+          { name: "Club", value: clubName, inline: true },
+          { name: "Serveur", value: str(answers.serveur) || "—", inline: true },
+          { name: "Contact", value: str(answers.responsable) || "—", inline: true },
+        ],
+        footer: { text: "Queen Pearls — Partenariats" },
+      },
+    );
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Impossible d'envoyer la demande pour le moment." };
   }
 }
 

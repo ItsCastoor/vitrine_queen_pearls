@@ -1,4 +1,4 @@
-export type QuestionType = "short" | "para" | "radio" | "checkbox";
+export type QuestionType = "short" | "para" | "radio" | "checkbox" | "file";
 
 export interface Question {
   id: string;
@@ -250,7 +250,10 @@ export function validateAnswers(
     
     if (!isRequired) continue;
 
-    if (q.type === "checkbox") {
+    if (q.type === "file") {
+      // Le fichier est géré côté client dans le wizard et validé dans l'action
+      continue;
+    } else if (q.type === "checkbox") {
       const arr = Array.isArray(value) ? value : [];
       if (q.requireAll) {
         if (arr.length < (q.options?.length ?? 0)) {

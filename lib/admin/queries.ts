@@ -2,7 +2,7 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { getResource } from "@/lib/admin/registry";
-import { guestbookEntries, recruitmentApplications } from "@/lib/db/schema";
+import { guestbookEntries, recruitmentApplications, partnershipApplications } from "@/lib/db/schema";
 
 export type NavBadges = Record<string, number>;
 
@@ -25,6 +25,15 @@ export async function getNavBadges(): Promise<NavBadges> {
     badges["livre-or"] = Number(guestbook?.c ?? 0);
   } catch {
     badges["livre-or"] = 0;
+  }
+  try {
+    const [partenariat] = await db
+      .select({ c: sql<number>`count(*)` })
+      .from(partnershipApplications)
+      .where(sql`${partnershipApplications.status} = 'new'`);
+    badges.partenaires = Number(partenariat?.c ?? 0);
+  } catch {
+    badges.partenaires = 0;
   }
   return badges;
 }

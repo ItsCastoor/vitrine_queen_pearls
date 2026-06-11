@@ -203,6 +203,22 @@ export const media = mysqlTable("media", {
   uploadedAt: createdAt(),
 });
 
+export const partnershipApplications = mysqlTable("partnership_applications", {
+  id: id(),
+  clubName: varchar("club_name", { length: 191 }).notNull(),
+  server: varchar("server", { length: 191 }),
+  contactName: varchar("contact_name", { length: 191 }),
+  contact: varchar("contact", { length: 255 }),
+  links: varchar("links", { length: 512 }),
+  message: text("message"),
+  answers: text("answers"),
+  logoUrl: varchar("logo_url", { length: 512 }),
+  status: mysqlEnum("status", ["new", "read", "accepted", "rejected"])
+    .notNull()
+    .default("new"),
+  createdAt: createdAt(),
+});
+
 export type Role = typeof roles.$inferSelect;
 export type RolePermission = typeof rolePermissions.$inferSelect;
 export type Admin = typeof admins.$inferSelect;
@@ -217,4 +233,5 @@ export type FaqEntry = typeof faqEntries.$inferSelect;
 export type HallOfFameEntry = typeof hallOfFame.$inferSelect;
 export type GuestbookEntry = typeof guestbookEntries.$inferSelect;
 export type RecruitmentApplication = typeof recruitmentApplications.$inferSelect;
+export type PartnershipApplication = typeof partnershipApplications.$inferSelect;
 export type MediaItem = typeof media.$inferSelect;

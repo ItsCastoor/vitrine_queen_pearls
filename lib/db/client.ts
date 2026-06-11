@@ -16,6 +16,7 @@ function createPool(): mysql.Pool {
     database: process.env.DB_NAME,
     connectionLimit: 10,
     namedPlaceholders: true,
+    charset: "utf8mb4",
   });
 }
 

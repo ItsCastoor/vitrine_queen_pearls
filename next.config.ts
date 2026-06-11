@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
   images: {
     // Images uploadées via l'admin et servies depuis /public/uploads.
     // L'optimiseur next/image fait une requête HTTP interne vers le serveur

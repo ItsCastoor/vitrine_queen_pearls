@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useMemo, useRef, useState } from "react";
+import { useActionState, useMemo, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import type { FormSection, Question } from "@/lib/recruitment/member-form";
 import type { ActionState } from "@/app/actions/public";
 
@@ -31,16 +32,19 @@ function QuestionField({
   question,
   value,
   onChange,
+  onFileChange,
   error,
   allAnswers,
 }: {
   question: Question;
   value: string | string[] | undefined;
   onChange: (v: string | string[]) => void;
+  onFileChange?: (id: string, file: File | null) => void;
   error?: string;
   allAnswers: Answers;
 }) {
   const isRequired = isQuestionRequired(question, allAnswers);
+  const [preview, setPreview] = useState<string | null>(null);
 
   return (
     <fieldset className="space-y-2">
@@ -124,6 +128,32 @@ function QuestionField({
         </div>
       )}
 
+      {question.type === "file" && (
+        <div className="space-y-3">
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="block w-full text-sm text-greypearl file:mr-4 file:cursor-pointer file:rounded-lg file:border file:border-or/30 file:bg-white/70 file:px-4 file:py-2 file:text-sm file:text-ink hover:file:border-or"
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              onChange(f ? f.name : "");
+              onFileChange?.(question.id, f);
+              if (f) {
+                const url = URL.createObjectURL(f);
+                setPreview(url);
+              } else {
+                setPreview(null);
+              }
+            }}
+          />
+          {preview && (
+            <div className="relative h-24 w-24 overflow-hidden rounded-lg border border-or/20">
+              <Image src={preview} alt="Aperçu" fill className="object-contain" unoptimized />
+            </div>
+          )}
+        </div>
+      )}
+
       {error && <p className="text-sm text-rose-pearl">{error}</p>}
     </fieldset>
   );
@@ -145,8 +175,10 @@ export function RecruitmentWizard({
   successMessage?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, initial);
+  const [, startTransition] = useTransition();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
+  const [files, setFiles] = useState<Record<string, File>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -165,21 +197,42 @@ export function RecruitmentWizard({
     });
   }
 
+  function setFile(id: string, file: File | null) {
+    setFiles((prev) => {
+      const next = { ...prev };
+      if (file) next[id] = file;
+      else delete next[id];
+      return next;
+    });
+    setErrors((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
   function validateSection(): boolean {
     const next: Record<string, string> = {};
     for (const q of section.questions) {
       if (!isQuestionRequired(q, answers)) continue;
 
-      const v = answers[q.id];
-      if (q.type === "checkbox") {
-        const arr = Array.isArray(v) ? v : [];
+      if (q.type === "file") {
+        if (!files[q.id]) {
+          next[q.id] = "Ce fichier est obligatoire.";
+        }
+      } else if (q.type === "checkbox") {
+        const arr = Array.isArray(answers[q.id]) ? (answers[q.id] as string[]) : [];
         if (q.requireAll && arr.length < (q.options?.length ?? 0)) {
           next[q.id] = "Merci de cocher toutes les cases.";
         } else if (!q.requireAll && arr.length === 0) {
           next[q.id] = "Merci de sélectionner au moins une option.";
         }
-      } else if (typeof v !== "string" || v.trim().length === 0) {
-        next[q.id] = "Cette réponse est obligatoire.";
+      } else {
+        const v = answers[q.id];
+        if (typeof v !== "string" || v.trim().length === 0) {
+          next[q.id] = "Cette réponse est obligatoire.";
+        }
       }
     }
     setErrors(next);
@@ -213,9 +266,16 @@ export function RecruitmentWizard({
       ref={formRef}
       action={formAction}
       onSubmit={(e) => {
-        if (!validateSection()) {
-          e.preventDefault();
+        e.preventDefault();
+        if (!validateSection()) return;
+        // Build FormData manually to include file uploads
+        const fd = new FormData();
+        fd.append("payload", payload);
+        if (formId) fd.append("formId", formId);
+        for (const [name, file] of Object.entries(files)) {
+          fd.append(name, file);
         }
+        startTransition(() => formAction(fd));
       }}
       className="qp-card p-6 sm:p-8"
     >
@@ -238,6 +298,10 @@ export function RecruitmentWizard({
         <h3 className="qp-title mt-5 text-2xl text-ink">{section.title}</h3>
       </div>
 
+      <p className="mb-5 text-xs text-greypearl">
+        Les champs marqués d&apos;un <span className="text-rose-pearl font-medium">*</span> sont obligatoires.
+      </p>
+
       <div className="space-y-7">
         {section.questions.map((q) => (
           <QuestionField
@@ -246,6 +310,7 @@ export function RecruitmentWizard({
             value={answers[q.id]}
             error={errors[q.id]}
             onChange={(v) => setAnswer(q.id, v)}
+            onFileChange={setFile}
             allAnswers={answers}
           />
         ))}
